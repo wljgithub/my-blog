@@ -7,7 +7,6 @@ import (
 )
 
 func main() {
-
 	var port = ":" + strconv.Itoa(common.Config.Server.Port)
 	server := routers.NewServer()
 	server.Run(port)
