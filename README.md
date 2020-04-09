@@ -1,16 +1,16 @@
-### What is this?
+## What is this?
 A blog written in Bootstrap + Vue and Gin (a golang web framework)
 
 [Demo click here](https://xiulu.xyz)
 
-### Supported feature
+## Supported feature
 - [x] Responsive UI
 - [x] Login
 - [x] Edit article
 - [x] Markdown preview
 - [ ] Comment system
 
-### How to Use?
+## How to Use?
 
 Copy and paste the following line into your machine
 ```shell script
@@ -20,11 +20,11 @@ Notice: This script only work on centos6.
 
 And It is recommended that to run this script on a pure machine instance,to prevent unpredictable error
 
-### What does the script actually do?
+## What does the script actually do?
 
 It will automatically install prerequisite enviroment,such as mysql,nginx,golang etc
 
 And will configure them in proper way
 
-### License 
+## License 
 MIT
