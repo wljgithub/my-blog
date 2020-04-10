@@ -7,7 +7,7 @@ type Auth struct {
 	Created  string `db:"created_time,size:50,notnull"`
 	Account  string `db:"account,size:50,notnull"`
 	Password string `db:"password,size:50,notnull"`
-	Email    string `db:"email"`
+	Email    string `db:"-"`
 }
 
 func CheckAccount(account, password string) error {
