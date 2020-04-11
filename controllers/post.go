@@ -39,6 +39,7 @@ func AddPost(c *gin.Context) {
 	if post.Id <= 0 {
 		if post.ArchiveId <= 0 {
 			post.ArchiveId = models.GetArchiveId()
+			models.AddArchiveCount(post.ArchiveId)
 		}
 		if post.CategoryId <= 0 {
 			post.CategoryId = models.GetDefaultCategory()

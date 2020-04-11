@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"my-blog/util"
 	"time"
 )
@@ -36,5 +37,11 @@ func InsertArchive() error {
 		Name: time.Now().Format("2006-01"),
 	}
 	err := mysql.Insert(&archive)
+	return err
+}
+func AddArchiveCount(id int) error {
+	var err error
+	var sql = fmt.Sprintf("UPDATE archive SET amount = amount +1 WHERE id = %d", id)
+	_, err = mysql.Exec(sql)
 	return err
 }
