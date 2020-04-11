@@ -1,0 +1,17 @@
+appname: my-blog
+
+server:
+  port: 3000
+  sessionAge: 2
+  useCors: false
+  dist: "./front-end/dist"
+
+db:
+  type: mysql
+  address: localhost
+  port: 3306
+  name: blog
+  user: jack
+  password: jack
+  parseTime: true
+
