@@ -367,7 +367,9 @@ renew_https() {
 
 pull_repo() {
     cd "${BLOG_ROOT_PATH}" || error_exit "you haven't clone the blog repo"
-    git stash && git stash drop
+    if [[ -n "$(git status --porcelain)" ]]; then
+        git stash && git stash drop
+    fi
     git pull
 }
 
