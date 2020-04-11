@@ -158,6 +158,7 @@ export default {
         .linkCategory(this.article.id, category.id)
         .then(rsp => {
           if (rsp.code === 0) {
+            this.article.category_id = category.id
             hint.toast("success", this, { contextualStyle: "info" });
           } else {
             hint.toast("failed", this, { contextualStyle: "danger" });
