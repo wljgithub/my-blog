@@ -42,7 +42,8 @@ func AddPost(c *gin.Context) {
 			models.AddArchiveCount(post.ArchiveId)
 		}
 		if post.CategoryId <= 0 {
-			post.CategoryId = models.GetDefaultCategory()
+			//post.CategoryId = models.GetDefaultCategory()
+			post.CategoryId = 0
 		}
 		//post.CreatedTime = time.Now()
 		post.UpdatedTime = time.Now()

@@ -63,6 +63,12 @@ func LinkCategory(c *gin.Context) {
 		c.JSON(http.StatusOK, BaseResponse{Code: 1, Msg: "required post id or category id"})
 		return
 	}
+	if cId, err := models.GetCategoryIdByPostId(req.PostId); cId ==0 && err == nil {
+		if err := models.UpdateCategoryAmount(req.CategoryId); err != nil {
+			c.JSON(http.StatusOK, BaseResponse{Code: 1, Msg: "failed to update category amount"})
+			return
+		}
+	}
 	if err := models.LinkCategory(req.PostId, req.CategoryId); err != nil {
 		c.JSON(http.StatusOK, BaseResponse{Code: 1, Msg: "db error"})
 		return

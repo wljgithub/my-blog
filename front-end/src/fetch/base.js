@@ -5,7 +5,6 @@ const prefix = "/api";
 if (process.env.NODE_ENV != "production") {
   axios.defaults.baseURL = process.env.VUE_APP_LOCAL_API_URL;
 }
-
 axios.defaults.timeout = 30000;
 axios.interceptors.request.use(
   function(config) {

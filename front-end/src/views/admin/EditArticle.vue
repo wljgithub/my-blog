@@ -152,8 +152,20 @@ export default {
         });
     },
     linkCategory(category) {
-      this.article.category_id = category.id;
-      hint.toast("success", this, { contextualStyle: "info" });
+      // this.article.category_id = category.id;
+
+      admin
+        .linkCategory(this.article.id, category.id)
+        .then(rsp => {
+          if (rsp.code === 0) {
+            hint.toast("success", this, { contextualStyle: "info" });
+          } else {
+            hint.toast("failed", this, { contextualStyle: "danger" });
+          }
+        })
+        .catch(err => {
+          hint.toast(err, this, { contextualStyle: "danger" });
+        });
     }
   },
   components: {

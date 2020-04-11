@@ -1,3 +1,4 @@
+
 -- MySQL Workbench Forward Engineering
 
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
@@ -23,11 +24,11 @@ USE `blog` ;
 CREATE TABLE IF NOT EXISTS `blog`.`archive` (
   `id` INT(11) NOT NULL AUTO_INCREMENT COMMENT '		',
   `name` VARCHAR(10) NOT NULL,
-  `amount` INT(11) NOT NULL DEFAULT 0,
+  `amount` INT(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE INDEX `name_UNIQUE` (`name` ASC))
 ENGINE = InnoDB
-AUTO_INCREMENT = 17
+AUTO_INCREMENT = 18
 DEFAULT CHARACTER SET = latin1;
 
 
@@ -43,7 +44,7 @@ CREATE TABLE IF NOT EXISTS `blog`.`auth` (
   PRIMARY KEY (`uid`),
   UNIQUE INDEX `accountIndex` USING BTREE (`account` ASC))
 ENGINE = InnoDB
-AUTO_INCREMENT = 2
+AUTO_INCREMENT = 3
 DEFAULT CHARACTER SET = utf8;
 
 
@@ -53,7 +54,7 @@ DEFAULT CHARACTER SET = utf8;
 CREATE TABLE IF NOT EXISTS `blog`.`category` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(45) NOT NULL,
-  `amount` INT(11) NOT NULL DEFAULT 0,
+  `amount` INT(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE INDEX `name_UNIQUE` (`name` ASC))
 ENGINE = InnoDB
@@ -66,31 +67,25 @@ DEFAULT CHARACTER SET = latin1;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `blog`.`post` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
-  `title` VARCHAR(200) NOT NULL,
-  `content` LONGTEXT NULL DEFAULT NULL,
+  `title` VARCHAR(200) COLLATE 'utf8mb4_unicode_ci' NOT NULL,
+  `content` LONGTEXT COLLATE 'utf8mb4_unicode_ci' NULL DEFAULT NULL,
   `created_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `view` INT(11) NULL DEFAULT NULL,
-  `author` VARCHAR(45) NULL DEFAULT NULL,
+  `author` VARCHAR(45) COLLATE 'utf8mb4_unicode_ci' NULL DEFAULT NULL,
   `save_type` TINYINT(4) NOT NULL,
   `archive_id` INT(11) NOT NULL,
   `category_id` INT(11) NOT NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_post_archive_idx` (`archive_id` ASC),
-  INDEX `fk_post_category1_idx` (`category_id` ASC),
   CONSTRAINT `fk_post_archive`
     FOREIGN KEY (`archive_id`)
     REFERENCES `blog`.`archive` (`id`)
     ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_post_category1`
-    FOREIGN KEY (`category_id`)
-    REFERENCES `blog`.`category` (`id`)
-    ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB
-AUTO_INCREMENT = 28
-DEFAULT CHARACTER SET = latin1;
+AUTO_INCREMENT = 31;
+
 ALTER TABLE `blog`.`post` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------
@@ -99,7 +94,7 @@ ALTER TABLE `blog`.`post` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unico
 CREATE TABLE IF NOT EXISTS `blog`.`tag` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(45) NOT NULL,
-  `amount` INT(11) NOT NULL DEFAULT 0,
+  `amount` INT(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE INDEX `name_UNIQUE` (`name` ASC))
 ENGINE = InnoDB
@@ -133,3 +128,4 @@ DEFAULT CHARACTER SET = latin1;
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
+

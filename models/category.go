@@ -46,3 +46,14 @@ func LinkCategory(postId, categoryId int) error {
 	_, err := mysql.Exec(sql)
 	return err
 }
+func GetCategoryIdByPostId(postId int) (int, error) {
+	var CategoryId int
+	sql := fmt.Sprintf("SELECT category_id from post WHERE id = %d", postId)
+	err := mysql.SelectOne(&CategoryId, sql)
+	return CategoryId, err
+}
+func UpdateCategoryAmount(categoryId int) error {
+	var sql = fmt.Sprintf("UPDATE category SET amount = amount +1 WHERE id = %d", categoryId)
+	_, err := mysql.Exec(sql)
+	return err
+}
