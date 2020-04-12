@@ -2,7 +2,8 @@ import axios from "axios";
 import token from "@/utils/token";
 
 const prefix = "/api";
-if (process.env.PROJECT_ENV != "production") {
+console.log(process.env)
+if (process.env.VUE_APP_PROJECT_ENV != "production") {
   axios.defaults.baseURL = process.env.VUE_APP_LOCAL_API_URL;
 }
 axios.defaults.timeout = 30000;

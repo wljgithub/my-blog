@@ -3,20 +3,28 @@
 # Notice: this script only support centos 6 now
 # And It is recommended that to run this script on a pure machine instance,to prevent unpredictable error
 
-# export PS4='+${BASH_SOURCE}:${LINENO}:${FUNCNAME[0]}: '
-# set -ex
-set -e
+export PS4='+${BASH_SOURCE}:${LINENO}:${FUNCNAME[0]}: '
+set -ex
+# set -e
 
-# blog account and password config
-BLOG_ACCOUNT="jack"
-BLOG_PASSWORD="jack"
+# Blog login config
+# used to login blog on browser
+BLOG_ACCOUNT="admin"
+BLOG_PASSWORD="adminpassword"
 SALT=')(*&^'
-MYSQL_ROOT_PASSWORD='root-password'
-MYSQL_INIT_FILE="${HOME}/.mysql/init"
-# website path
+
+# Blog deploy config
 BLOG_REPO='https://github.com/wljgithub/my-blog.git'
 BLOG_NAME='my-blog'
 BLOG_ROOT_PATH="${HOME}/${BLOG_NAME}"
+BLOG_CONFIG_FILE="${BLOG_ROOT_PATH}/conf/config.yml"
+
+# Mysql config
+MYSQL_USER="root"
+MYSQL_ROOT_PASSWORD='root-password'
+MYSQL_INIT_FILE="/var/mysql/init"
+
+# Nginx web static dir
 WEBSITE_ROOT_DIR='/data'
 WEBSITE_STATIC_DIR="${WEBSITE_ROOT_DIR}/www"
 
@@ -24,7 +32,7 @@ WEBSITE_STATIC_DIR="${WEBSITE_ROOT_DIR}/www"
 NGINX_USER="nginx"
 NGINX_CONFIG_FILE="/etc/nginx/nginx.conf"
 GO_PROXY='https://goproxy.cn'
-SHELL_CONFIG_FILE="/etc/bashrc"
+SHELL_CONFIG_FILE="/etc/profile.d/myconfig.sh"
 
 NETWORK_PORTS=(
     "80"
@@ -46,6 +54,7 @@ RPM_REPOS=(
 init() {
     check_run_privilege
     check_distrs
+    ask_user_config
     check_dependency
 }
 
@@ -79,35 +88,14 @@ deploy_env() {
     fi
 
     if ! check_command_exist "go"; then
-        install_golang && config_golang
-    else
-        config_golang
+        install_golang
     fi
-
+    config_shell_variables
     if ! check_command_exist "nginx"; then
         install_nginx && config_nginx
     else
         config_nginx
     fi
-
-}
-
-install_golang() {
-    install_dependency "golang"
-
-}
-config_golang() {
-    cat >>${SHELL_CONFIG_FILE} <<-EOF
-GOPATH=$HOME/.go
-PATH=${PATH}:${GOPATH}/bin
-GO111MODULE=on
-GOPROXY=${GO_PROXY}
-NODE_ENV=production
-GIN_MODE=release
-
-export PATH GO111MODULE GOPROXY NODE_ENV GIN_MODE
-EOF
-    source ${SHELL_CONFIG_FILE}
 
 }
 install_rpm_repo() {
@@ -120,71 +108,104 @@ install_rpm_repo() {
     done
 
 }
+install_golang() {
+    install_dependency "golang"
+
+}
+config_shell_variables() {
+    cat >${SHELL_CONFIG_FILE} <<-EOF
+GOPATH=$HOME/.go
+GOBIN=${GOPATH}/bin
+
+GO111MODULE=on
+GOPROXY=https://goproxy.cn
+
+GIN_MODE=release
+VUE_APP_PROJECT_ENV="production"
+
+PATH=${PATH}:${GOBIN}
+PATH="$(yarn global bin):$PATH"
+export PATH GO111MODULE GOPROXY GIN_MODE GOBIN
+EOF
+    source ${SHELL_CONFIG_FILE}
+}
+
 install_mysql() {
-    # install_dependency "localinstall" 'https://dev.mysql.com/get/mysql80-community-release-el6-3.noarch.rpm'
     install_dependency --enablerepo=mysql80-community install mysql-community-server
 }
+
 enable_mysql() {
     /sbin/chkconfig --levels 235 mysqld on
 }
 
 restart_mysql() {
-    service mysqld restart
+    stop_mysql
+    start_mysql
 }
+
 start_mysql() {
-    service mysqld start
+    mysqld --init-file=${MYSQL_INIT_FILE} --console --user=mysql &
+    until pids=$(pidof mysqld); do
+        echo -e "waitting for mysqld start...."
+    done
 }
 stop_mysql() {
-    service mysqld stop
+    local mysqlPID="$(pgrep mysql)"
+    if [[ -n ${mysqlPID} ]]; then
+        kill ${mysqlPID}
+    fi
 }
 config_mysql() {
+    init_mysql_data_dir
     # this is a mysql offical shell script,used to remove anonymous users and remove test datebases
     # mysql_secure_installation || error_exit "failed to config mysql"
 
     reset_mysql_password || error_exit "failed to reset mysql root password"
     enable_mysql
 }
+init_mysql_data_dir() {
+    mysqlDir="/var/lib/mysql/"
+    if [[ -d "${mysqlDir}" ]]; then
+        rm -rf "${mysqlDir}"
+        # mysqld --initialize --user=mysql
+        service mysqld restart && service mysqld stop
+        # chmod -R 755 "${mysqlDir}"
+    fi
+
+}
 set_blog_password() {
-    BLOG_PASSWORD=$(echo -n "${BLOG_PASSWORD}${SALT}" | md5sum | awk '{print $1}')
+    local password
+    password=$(echo -n "${BLOG_PASSWORD}${SALT}" | md5sum | awk '{print $1}')
     DATE=$(date '+%Y-%m-%d')
-    cat <<-EOF | mysql -u root -p${MYSQL_ROOT_PASSWORD}
-    INSERT INTO blog.auth (created_time, account, password) VALUES ("${DATE}","${BLOG_ACCOUNT}" , "${BLOG_PASSWORD}");
+
+    cat <<-EOF | mysql -u root -p${password}
+INSERT INTO blog.auth (created_time, account, password) VALUES ("${DATE}","${BLOG_ACCOUNT}" , "${BLOG_PASSWORD}");
 EOF
 }
 
 reset_mysql_password() {
     create_mysql_init_file
-    # this is a bug in mysql'lib,need to delete and recreate it
-    kill -9 $(pgrep mysql) || echo
-
-    mysqld --init-file=${MYSQL_INIT_FILE} --console --user=mysql
-
-    #     start_mysql && stop_mysql
-    #     skip_mysql_auth && sleep 2 && cat | mysql <<-EOF
-
-    # SET GLOBAL validate_password.length = 4 ;
-    # SET GLOBAL validate_password.number_count = 0;
-    # SET GLOBAL  validate_password.policy = LOW;
-    # FLUSH PRIVILEGES;
-    # ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}'
-    # EOF
-    rm -rf /var/lib/mysql/
     restart_mysql
 }
 create_mysql_init_file() {
     mkdir -p $(dirname "${MYSQL_INIT_FILE}")
     cat >"${MYSQL_INIT_FILE}" <<-EOF
-UPDATE mysql.user SET authentication_string='${MYSQL_ROOT_PASSWORD}' WHERE user='root' and host='localhost';
+SET GLOBAL validate_password.length = 4 ;
+SET GLOBAL validate_password.number_count = 0;
+SET GLOBAL  validate_password.policy = LOW;
+ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
 EOF
+    chown -R mysql:mysql $(dirname "${MYSQL_INIT_FILE}")
+    chmod 755 "${MYSQL_INIT_FILE}"
 }
 create_mysql_table() {
-    restart_mysql
     if [[ -f "${BLOG_ROOT_PATH}/db.sql" ]]; then
-        cat "${BLOG_ROOT_PATH}/db.sql" | mysql -u root "-p${MYSQL_ROOT_PASSWORD}"
+        # cat "${BLOG_ROOT_PATH}/db.sql" | mysql -u root "-p${MYSQL_ROOT_PASSWORD}" || echo "failed to create blog mysql tables"
+        mysql -u root -p${MYSQL_ROOT_PASSWORD} <"${BLOG_ROOT_PATH}/db.sql" || echo "failed to create blog mysql tables"
     else
         echo "can't find init file to create datebase"
     fi
-    set_blog_password || error_exit "failed to set blog password in mysql"
+    set_blog_password || echo -e "failed to set blog password in mysql"
 
 }
 install_nodejs() {
@@ -199,6 +220,7 @@ install_yarn() {
     # yum localinstall -y https://dl.yarnpkg.com/rpm/yarn.repo
     install_dependency "yarn"
 }
+
 run_blog() {
     compile_frontend
     prepare_static_dir
@@ -206,6 +228,7 @@ run_blog() {
     compile_backend
     run_server
 }
+
 clone_repo() {
     cd ${HOME}
     git clone "${BLOG_REPO}" "${BLOG_NAME}" || cd "${HOME}/${BLOG_NAME}"
@@ -220,22 +243,26 @@ compile_frontend() {
     restart_mysql
 }
 prepare_static_dir() {
-
     make_website_dir
     chdir_mode
 }
+
 copy_static_to_nginx() {
     cp -a ${BLOG_ROOT_PATH}/front-end/dist/* "${WEBSITE_STATIC_DIR}"
 }
+
 compile_backend() {
     cd "${BLOG_ROOT_PATH}" && go build
 }
+
 run_server() {
     cd "${BLOG_ROOT_PATH}" && ./${BLOG_NAME} &
 }
+
 install_dependency() {
     yum install -y "$@" || exit 1
 }
+
 update_package_manager() {
     yum update -y
 }
@@ -249,7 +276,7 @@ error_exit() {
 open_port_in_firewall() {
     # centos6
     for PORT in "${NETWORK_PORTS[@]}"; do
-        check_network_rule || add_network_rule "${PORT}"
+        check_network_rule "${PORT}" || add_network_rule "${PORT}"
     done
     service iptables save && service iptables reload
 }
@@ -259,11 +286,7 @@ add_network_rule() {
 check_network_rule() {
     iptables -I INPUT -p tcp --dport "${1}" -j ACCEPT
 }
-##manage nginx
 
-# change dir mode
-# reload config
-#
 install_nginx() {
     # wget http://nginx.org/packages/centos/6/noarch/RPMS/nginx-release-centos-6-0.el6.ngx.noarch.rpm
     # rpm -ivh nginx-release-centos-6-0.el6.ngx.noarch.rpm
@@ -336,13 +359,6 @@ EOF
     test_nginx_config || error_exit "malformat nginx config"
     reload_nginx
 }
-
-make_website_dir() {
-    mkdir -p "${WEBSITE_STATIC_DIR}"
-}
-chdir_mode() {
-    chown -R "${NGINX_USER}:${NGINX_USER}" "${WEBSITE_ROOT_DIR}"
-}
 reload_nginx() {
     if nginx -s stop; then
         nginx -c "${NGINX_CONFIG_FILE}"
@@ -350,7 +366,6 @@ reload_nginx() {
         nginx -c "${NGINX_CONFIG_FILE}"
     fi
 }
-
 test_nginx_config() {
     nginx -t
 }
@@ -359,16 +374,86 @@ config_blog() {
     create_mysql_table
 }
 
-#https
+make_website_dir() {
+    mkdir -p "${WEBSITE_STATIC_DIR}"
+}
+chdir_mode() {
+    chown -R "${NGINX_USER}:${NGINX_USER}" "${WEBSITE_ROOT_DIR}"
+}
+
+ask_user_config() {
+    while :; do
+        echo -e "Before deploy blog,you need to enter your personal blog config"
+        echo
+
+        echo -e "Length of Mysql password need to more than 8 "
+        read -r -p "Mysql Root Password (Default: root-password):" password
+
+        if [[ -n "${password}" ]] && [[ "${#password}" -lt 8 ]]; then
+            echo -e "Your Mysql password's length is short than 8"
+            echo -e "Need to config again"
+            continue
+        fi
+        [[ -n "${password}" ]] && MYSQL_ROOT_PASSWORD=${password}
+
+        read -r -p "Blog Account (Default: admin):" account
+
+        [[ -n "${account}" ]] && BLOG_ACCOUNT=${account}
+
+        read -r -p "Blog Password (Default:adminpassword):" blogPassword
+        [[ -n "${blogPassword}" ]] && BLOG_PASSWORD=${blogPassword}
+
+        cat <<-EOF
+
+        Your Config is below:
+
+
+        Mysql Password: ${MYSQL_ROOT_PASSWORD}
+
+        Blog  Account: ${BLOG_ACCOUNT}
+        
+        Blog  Password: ${BLOG_PASSWORD}
+EOF
+        local confirm="y"
+        read -r -p "Confirm?(y/n)" confirm
+
+        if [[ -n "${confirm}" ]]; then
+            confirm=$(echo ${confirm} || tr '[:upper:]' '[:lower:]')
+        fi
+
+        case "${confirm}" in
+        "y")
+            break
+            ;;
+        "n")
+            continue
+            ;;
+        *)
+            echo "unsupported option" && continue
+            ;;
+        esac
+
+    done
+
+}
 
 renew_https() {
     echo "0 0,12 * * * root python -c 'import random; import time; time.sleep(random.random() * 3600)' && /usr/local/bin/certbot-auto renew -q" | sudo tee -a /etc/crontab >/dev/null
 }
 
+update_blog_config() {
+    install_yaml_parser
+    yq w -i "${BLOG_CONFIG_FILE}" db.user ${MYSQL_USER}
+    yq w -i ${BLOG_CONFIG_FILE} db.password ${MYSQL_ROOT_PASSWORD}
+
+}
+install_yaml_parser() {
+    go get github.com/mikefarah/yq/v3
+}
 pull_repo() {
     cd "${BLOG_ROOT_PATH}" || error_exit "you haven't clone the blog repo"
     if [[ -n "$(git status --porcelain)" ]]; then
-        git stash && git stash drop
+        git add -A git stash && git stash drop
     fi
     git pull
 }
@@ -380,16 +465,41 @@ update_blog() {
 deploy_blog() {
     init
     deploy_env
-    config_blog
     open_port_in_firewall
+    config_blog
+    update_blog_config
     run_blog
+    success_prompt
+}
+success_prompt() {
+    ip=$(curl -s https://ipinfo.io/ip)
+    [[ -z "${ip}" ]] && ip=$(curl -s https://api.ip.sb/ip)
+    [[ -z "${ip}" ]] && ip=$(curl -s https://api.ipify.org)
+    [[ -z "${ip}" ]] && ip=$(curl -s https://ip.seeip.org)
+    [[ -z "${ip}" ]] && error_exit "failed to get your machine ip"
+
+    cat <<-EOF
+    Congratulation.
+    You have successfuly deployed the blog.
+    
+    Your personal config:
+
+        Mysql User: root
+
+        Mysql Password: ${MYSQL_ROOT_PASSWORD}
+
+        Blog  Account: ${BLOG_ACCOUNT}
+
+        Blog  Password: ${BLOG_PASSWORD}
+
+    Go ahead and play with it by visit ${ip} on you browser
+    
+EOF
+    exit
 }
 error_choice() {
     echo -e "unsupported optiton,please choose again."
 }
-# manage_server() {
-
-# }
 
 clear
 while :; do
@@ -402,7 +512,8 @@ while :; do
             2.update blog       (just git pull repo,compile codes and update it)
 EOF
 
-    read -r choose
+    read -r -p "option:" choose
+
     case "${choose}" in
     1)
         deploy_blog

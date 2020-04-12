@@ -2,7 +2,7 @@ const CompressionPlugin = require("compression-webpack-plugin");
 
 module.exports = {
   configureWebpack: config => {
-    if (process.env.PROJECT_ENV === "production") {
+    if (process.env.VUE_APP_PROJECT_ENV === "production") {
       return {
         plugins: [
           new CompressionPlugin({
