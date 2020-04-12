@@ -51,6 +51,12 @@ RPM_REPOS=(
     "http://nginx.org/packages/centos/6/noarch/RPMS/nginx-release-centos-6-0.el6.ngx.noarch.rpm" #nginx repo
 )
 
+none=$(printf '\e[0m')
+green=$(printf '\e[92m')
+# blue=$(printf '\e[0;34m')
+yellow=$(printf '\e[0;33m')
+
+
 init() {
     check_run_privilege
     check_distrs
@@ -478,22 +484,23 @@ success_prompt() {
     [[ -z "${ip}" ]] && ip=$(curl -s https://ip.seeip.org)
     [[ -z "${ip}" ]] && error_exit "failed to get your machine ip"
 
+    clear
     cat <<-EOF
     Congratulation.
     You have successfuly deployed the blog.
     
     Your personal config:
 
-        Mysql User: root
+        Mysql User: ${yellow} root ${none}
 
-        Mysql Password: ${MYSQL_ROOT_PASSWORD}
+        Mysql Password: ${yellow} ${MYSQL_ROOT_PASSWORD} ${none}
 
-        Blog  Account: ${BLOG_ACCOUNT}
+        Blog  Account: ${yellow} ${BLOG_ACCOUNT} ${none}
 
-        Blog  Password: ${BLOG_PASSWORD}
+        Blog  Password: ${yellow} ${BLOG_PASSWORD} ${none}
 
-    Go ahead and play with it by visit ${ip} on you browser
-    
+    Go ahead and play with it by visit ${green} ${ip} ${none} on you browser.
+    By the way,if your are using AWS,don't forget to config security group to allow HTTP request.
 EOF
     exit
 }
