@@ -14,7 +14,7 @@ A blog written in Bootstrap + Vue and Gin (a golang web framework)
 
 Copy and paste the following line into your machine
 ```shell script
-wget -O deploy.sh https://raw.githubusercontent.com/wljgithub/my-blog/master/manage.sh && sudo bash deploy.sh
+wget -q -O deploy.sh https://raw.githubusercontent.com/wljgithub/my-blog/master/manage.sh && sudo bash deploy.sh
 ```
 Notice: This script only work on centos6.
 
@@ -28,3 +28,5 @@ And will configure them in proper way
 
 ## License 
 MIT
+
+
