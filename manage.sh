@@ -3,9 +3,9 @@
 # Notice: this script only support centos 6 now
 # And It is recommended that to run this script on a pure machine instance,to prevent unpredictable error
 
-export PS4='+${BASH_SOURCE}:${LINENO}:${FUNCNAME[0]}: '
-set -ex
-# set -e
+# export PS4='+${BASH_SOURCE}:${LINENO}:${FUNCNAME[0]}: '
+# set -ex
+set -e
 
 # Blog login config
 # used to login blog on browser
@@ -178,8 +178,8 @@ set_blog_password() {
     password=$(echo -n "${BLOG_PASSWORD}${SALT}" | md5sum | awk '{print $1}')
     DATE=$(date '+%Y-%m-%d')
 
-    cat <<-EOF | mysql -u root -p${password}
-INSERT INTO blog.auth (created_time, account, password) VALUES ("${DATE}","${BLOG_ACCOUNT}" , "${BLOG_PASSWORD}");
+    cat <<-EOF | mysql -u root -p${MYSQL_ROOT_PASSWORD}
+INSERT INTO blog.auth (created_time, account, password) VALUES ("${DATE}","${BLOG_ACCOUNT}" , "${password}");
 EOF
 }
 
