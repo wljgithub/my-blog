@@ -24,7 +24,9 @@ And It is recommended that to run this script on a pure machine instance,to prev
 
 It will automatically install prerequisite enviroment,such as mysql,nginx,golang etc
 
-And will configure them in proper way
+And will configure them in proper way。
+
+After this script done,you can directly visit your own blog on the browser.
 
 ## License 
 MIT
