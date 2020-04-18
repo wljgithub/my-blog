@@ -1,4 +1,6 @@
+
 $primary:#4e60c8c4;
 $secondary:#5e73ed;
 
-@import "bootstrap"
+@import 'node_modules/bootstrap/scss/bootstrap';
+@import 'node_modules/bootstrap-vue/src/index.scss';

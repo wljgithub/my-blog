@@ -1,18 +1,17 @@
-import Vue from 'vue'
-import App from './App.vue'
-import router from './router'
-import 'bootstrap/dist/css/bootstrap.css'
-import 'bootstrap-vue/dist/bootstrap-vue.css'
-import { BootstrapVue, IconsPlugin } from 'bootstrap-vue'
+import Vue from "vue";
+import App from "./App.vue";
+import router from "./router";
+import "./assets/style/custom.scss"
 
+// import { BootstrapVue, BootstrapVueIcons } from 'bootstrap-vue'
+import BootstrapVue from "bootstrap-vue";
+import BootstrapVueIcons from "bootstrap-vue-icons";
 
-// Install BootstrapVue
-Vue.use(BootstrapVue)
-// Optionally install the BootstrapVue icon components plugin
-Vue.use(IconsPlugin)
-Vue.config.productionTip = false
+Vue.use(BootstrapVue);
+Vue.use(BootstrapVueIcons);
+Vue.config.productionTip = false;
 
 new Vue({
-    router,
-    render: h => h(App)
-}).$mount('#app')
+  router,
+  render: (h) => h(App),
+}).$mount("#app");

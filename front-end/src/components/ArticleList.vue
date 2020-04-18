@@ -35,7 +35,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "../assets/style/custom.scss";
+// @import "../assets/style/custom.scss";
 
 
 </style>
