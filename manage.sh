@@ -56,7 +56,6 @@ green=$(printf '\e[92m')
 # blue=$(printf '\e[0;34m')
 yellow=$(printf '\e[0;33m')
 
-
 init() {
     check_run_privilege
     check_distrs
@@ -262,6 +261,7 @@ compile_backend() {
 }
 
 run_server() {
+    [[ -n "$(pgrep ${BLOG_NAME})" ]] && pkill "${BLOG_NAME}"
     cd "${BLOG_ROOT_PATH}" && ./${BLOG_NAME} &
 }
 
@@ -459,7 +459,7 @@ install_yaml_parser() {
 pull_repo() {
     cd "${BLOG_ROOT_PATH}" || error_exit "you haven't clone the blog repo"
     if [[ -n "$(git status --porcelain)" ]]; then
-        git add -A git stash && git stash drop
+        git add -A && git stash && git stash drop
     fi
     git pull
 }
