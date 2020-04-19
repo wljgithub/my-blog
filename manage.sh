@@ -155,12 +155,14 @@ start_mysql() {
     until pids=$(pidof mysqld); do
         echo -e "waitting for mysqld start...."
     done
+    echo -e "mysql has successfuly started"
 }
 stop_mysql() {
     local mysqlPID="$(pgrep mysql)"
     if [[ -n ${mysqlPID} ]]; then
         kill ${mysqlPID}
     fi
+    echo -e "mysql has successfuly stop"
 }
 config_mysql() {
     init_mysql_data_dir
@@ -470,6 +472,7 @@ pull_repo() {
     cd "${BLOG_ROOT_PATH}" || error_exit "you haven't clone the blog repo"
     if [[ -n "$(git status --porcelain)" ]]; then
         git add -A && git stash && git stash drop
+        # cd "${BLOG_ROOT_PATH}" && git checkout .
     fi
     git pull
 }
@@ -492,6 +495,41 @@ deploy_blog() {
     update_blog_config
     run_blog
     success_prompt
+}
+manage_blog() {
+    clear
+    while :; do
+        cat <<-EOF
+            Manage the following service.
+
+            1.restart mysql     
+
+            2.stop mysql       
+            
+            3.view nginx log       
+EOF
+
+        read -r -p "option:" choose
+
+        case "${choose}" in
+        1)
+            restart_mysql
+            break
+            ;;
+        2)
+            stop_mysql
+            break
+            ;;
+        3)
+            tail -f /var/log/nginx/*
+            break
+            ;;
+        *)
+            error_choice
+            ;;
+        esac
+
+    done
 }
 get_ip() {
     ip=$(curl -s https://ipinfo.io/ip)
@@ -536,6 +574,8 @@ while :; do
             1.deploy blog       (automatilly to install env such mysql,nginx.and deploy it)
 
             2.update blog       (just git pull repo,compile codes and update it)
+            
+            3.manage blog service       (start,stop mysql,nginx etc)
 EOF
 
     read -r -p "option:" choose
@@ -546,6 +586,9 @@ EOF
         ;;
     2)
         update_blog
+        ;;
+    3)
+        manage_blog
         ;;
     *)
         error_choice
