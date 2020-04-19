@@ -48,7 +48,7 @@ export default {
     }
   },
   imageLink(id) {
-    console.log(id);
+    (id);
     return `https://picsum.photos/1024/400/?image=${5}`;
   }
 };

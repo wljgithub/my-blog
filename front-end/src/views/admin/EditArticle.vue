@@ -92,7 +92,7 @@ export default {
       art
         .editArticle(this.article)
         .then(res => {
-          console.log(res);
+          (res);
           if (res.code === 0) {
             this.$router.push(`/article/${res.article_id}`);
             hint.toast(res.msg, this, { contextualStyle: "success" });
@@ -120,7 +120,7 @@ export default {
         });
     },
     addCategories(para) {
-      console.log("add", para);
+      ("add", para);
       admin
         .addCategory(para)
         .then(res => {
@@ -139,7 +139,7 @@ export default {
       admin
         .linkTag(this.article.id, tag.id)
         .then(res => {
-          console.log(res);
+          (res);
           if (res.code === 0) {
             hint.toast(res.msg, this);
           } else {

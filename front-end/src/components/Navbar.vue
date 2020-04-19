@@ -55,12 +55,12 @@ export default {
       api
         .logout()
         .then(rsp => {
-          console.log(rsp);
+          (rsp);
           if (rsp.code === 0) {
             token.clearToken();
           }
         })
-        .catch(err => console.log(err));
+        .catch(err => (err));
     },
     async addPost() {
       this.$emit("add-post");

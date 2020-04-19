@@ -2,7 +2,6 @@ import axios from "axios";
 import token from "@/utils/token";
 
 const prefix = "/api";
-console.log(process.env)
 if (process.env.VUE_APP_PROJECT_ENV != "production") {
   axios.defaults.baseURL = process.env.VUE_APP_LOCAL_API_URL;
 }
@@ -21,7 +20,6 @@ axios.interceptors.request.use(
 );
 
 export default (url = "", params = {}, method = "get") => {
-  // console.log("tokenname",token.tokenName, token.getToken());
 
   method = method.toLowerCase();
   let headers = {};
