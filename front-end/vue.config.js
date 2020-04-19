@@ -42,7 +42,7 @@ module.exports = {
             algorithm: "gzip",
             test: /\.(js|css)$/, // patter name
             threshold: 10240, // compress file that sizes large than 10k
-            deleteOriginalAssets: true, // delete source
+            deleteOriginalAssets: false, // delete source
             minRatio: 0.8, // compress ratio
           }),
         ],
