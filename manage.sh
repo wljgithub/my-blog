@@ -27,6 +27,7 @@ MYSQL_INIT_FILE="/var/mysql/init"
 # Nginx web static dir
 WEBSITE_ROOT_DIR='/data'
 WEBSITE_STATIC_DIR="${WEBSITE_ROOT_DIR}/www"
+WEBSITE_STATIC_DIR_BACKUP="${WEBSITE_ROOT_DIR}/backup"
 
 # shell config
 NGINX_USER="nginx"
@@ -34,6 +35,7 @@ NGINX_CONFIG_FILE="/etc/nginx/nginx.conf"
 GO_PROXY='https://goproxy.cn'
 SHELL_CONFIG_FILE="/etc/profile.d/myconfig.sh"
 
+IP=""
 NETWORK_PORTS=(
     "80"
     "443")
@@ -230,6 +232,7 @@ run_blog() {
     compile_frontend
     prepare_static_dir
     copy_static_to_nginx
+    chdir_mode
     compile_backend
     run_server
 }
@@ -248,8 +251,15 @@ compile_frontend() {
     restart_mysql
 }
 prepare_static_dir() {
+    # if folder already exist, mv all the file to backup folder
+    if [[ -d "${WEBSITE_STATIC_DIR}" ]]; then
+        if [[ -d "${WEBSITE_STATIC_DIR_BACKUP}" ]]; then
+            rm -rf "${WEBSITE_STATIC_DIR_BACKUP}"
+        fi
+        mkdir -p "${WEBSITE_STATIC_DIR_BACKUP}" && chown -R ${NGINX_USER}:${NGINX_USER} "${WEBSITE_STATIC_DIR_BACKUP}"
+        mv ${WEBSITE_STATIC_DIR}/* "${WEBSITE_STATIC_DIR_BACKUP}"
+    fi
     make_website_dir
-    chdir_mode
 }
 
 copy_static_to_nginx() {
@@ -463,10 +473,16 @@ pull_repo() {
     fi
     git pull
 }
-
+update_success_prompt() {
+    get_ip
+    echo -e "Succeed to update blog"
+    echo -e "Go ahead and play with it by visit ${IP} on your browser"
+    exit
+}
 update_blog() {
     pull_repo
     run_blog
+    update_success_prompt
 }
 deploy_blog() {
     init
@@ -477,13 +493,16 @@ deploy_blog() {
     run_blog
     success_prompt
 }
-success_prompt() {
+get_ip() {
     ip=$(curl -s https://ipinfo.io/ip)
     [[ -z "${ip}" ]] && ip=$(curl -s https://api.ip.sb/ip)
     [[ -z "${ip}" ]] && ip=$(curl -s https://api.ipify.org)
     [[ -z "${ip}" ]] && ip=$(curl -s https://ip.seeip.org)
     [[ -z "${ip}" ]] && error_exit "failed to get your machine ip"
-
+    IP="${ip}"
+}
+success_prompt() {
+    get_ip
     clear
     cat <<-EOF
     Congratulation.
@@ -499,7 +518,7 @@ success_prompt() {
 
         Blog  Password: ${yellow} ${BLOG_PASSWORD} ${none}
 
-    Go ahead and play with it by visit ${green} ${ip} ${none} on you browser.
+    Go ahead and play with it by visit ${green} ${IP} ${none} on you browser.
     By the way,if your are using AWS,don't forget to config security group to allow HTTP request.
 EOF
     exit
