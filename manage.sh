@@ -151,8 +151,11 @@ restart_mysql() {
 }
 
 start_mysql() {
+    if [[ ! -f ${MYSQL_INIT_FILE} ]]; then
+        error_exit "can't find mysql init file"
+    fi
     mysqld --init-file=${MYSQL_INIT_FILE} --console --user=mysql &
-    until pids=$(pidof mysqld); do
+    until pidof mysqld; do
         echo -e "waitting for mysqld start...."
     done
     echo -e "mysql has successfuly started"
