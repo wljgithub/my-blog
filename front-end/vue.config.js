@@ -5,36 +5,12 @@ const BundleAnalyzerPlugin = require("webpack-bundle-analyzer")
 
 module.exports = {
   configureWebpack: (config) => {
-    // let remoteBundles = new HtmlWebpackExternalsPlugin({
-    //   externals: [
-    // {
-    //   module: "vue",
-    //   entry: "https://unpkg.com/vue@latest/dist/vue.min.js",
-    //   global: "Vue",
-    // },
-    // {
-    //   module: "bootstrap-vue",
-    //   entry:
-    //     "https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.js",
-    //   global: "BootstrapVue",
-    // },
-    // {
-    //   module: "bootstrap-vue-icons",
-    //   entry:
-    //     "https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue-icons.min.js",
-    //   global: "BootstrapVueIcons",
-    // },
-    // {
-    //   module: "bootstrap.css",
-    //   entry: "https://unpkg.com/bootstrap/dist/css/bootstrap.min.css",
-    // },
-    // {
-    //   module: "bootstrap-vue.css",
-    //   entry:
-    //     "https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.css",
-    // },
-    // ],
-    // });
+    let optimization = {
+      splitChunks: {
+        minSize: 10000,
+        maxSize: 250000,
+      },
+    };
     if (process.env.VUE_APP_PROJECT_ENV === "production") {
       return {
         plugins: [
@@ -46,10 +22,12 @@ module.exports = {
             minRatio: 0.8, // compress ratio
           }),
         ],
+        optimization: optimization,
       };
     } else if (process.env.VUE_APP_PROJECT_ENV === "test") {
       return {
         plugins: [new BundleAnalyzerPlugin()],
+        optimization: optimization,
       };
     } else {
       return {
