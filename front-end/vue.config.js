@@ -49,7 +49,7 @@ module.exports = {
       };
     } else if (process.env.VUE_APP_PROJECT_ENV === "test") {
       return {
-        plugins: [new BundleAnalyzerPlugin(), remoteBundles],
+        plugins: [new BundleAnalyzerPlugin()],
       };
     } else {
       return {
