@@ -332,6 +332,7 @@ http {
           server_name xiulu.xyz;
           location / {
                 root /data/www;
+                try_files $uri $uri/ /index.html;
         }
           location /api {
 
